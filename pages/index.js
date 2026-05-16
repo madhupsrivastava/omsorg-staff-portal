@@ -37,6 +37,8 @@ const TOOLS = [
     status: "live",
     tag: "Field Staff",
   },
+  {
+    id: "pricing",
     name: "Pricing Tool",
     desc: "Manage and update internal rate cards and pricing tables",
     url: "https://omsorg-pricing.vercel.app",
