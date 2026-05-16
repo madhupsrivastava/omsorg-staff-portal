@@ -24,7 +24,7 @@ const TOOLS = [
     id: "pricing",
     name: "Pricing Tool",
     desc: "Manage and update internal rate cards and pricing tables",
-    url: "#",
+    url: "https://project-iodcs.vercel.app",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <path d="M14 3L25 8v6c0 6-5 10-11 12C8 24 3 20 3 14V8l11-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
@@ -33,14 +33,14 @@ const TOOLS = [
     ),
     color: "#1A5C8B",
     lightColor: "#F0F5FF",
-    status: "coming",
+    status: "live",
     tag: "Internal",
   },
   {
     id: "staff",
     name: "Staff Profile Generator",
     desc: "Create and manage caregiver and staff profile documents",
-    url: "#",
+    url: "https://omsorg-staff-profile-generator.vercel.app",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <circle cx="14" cy="9" r="5" stroke="currentColor" strokeWidth="2"/>
@@ -50,7 +50,7 @@ const TOOLS = [
     ),
     color: "#1A7A4A",
     lightColor: "#F0FFF5",
-    status: "coming",
+    status: "live",
     tag: "HR & Operations",
   },
   {
