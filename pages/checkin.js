@@ -118,7 +118,7 @@ function SelectionScreen({ staffName, setStaffName, clientId, setClientId, clien
           style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "15px", boxSizing: "border-box", fontFamily: "inherit", background: "#fff" }}
         >
           <option value="">Select client or facility…</option>
-          {CLIENTS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
