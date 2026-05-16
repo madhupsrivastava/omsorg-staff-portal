@@ -4,19 +4,6 @@ import Head from "next/head";
 const G = "#8B1A1A";
 const GL = "#FFF0F0";
 
-// ─── CLIENT LIST ────────────────────────────────────────────────────────────
-// Add real client names, their address coordinates and allowed radius in metres.
-// To get lat/lng: open Google Maps, right-click the address, copy coordinates.
-const CLIENTS = [
-  { id: "c1", name: "Mrs. Sharma — Vasant Vihar, Delhi",       lat: 28.5562, lng: 77.1565, radius: 200 },
-  { id: "c2", name: "Mr. Mehta — Andheri West, Mumbai",        lat: 19.1136, lng: 72.8697, radius: 200 },
-  { id: "c3", name: "Mrs. Iyer — Adyar, Chennai",              lat: 13.0067, lng: 80.2568, radius: 200 },
-  { id: "c4", name: "Mr. Reddy — Banjara Hills, Hyderabad",    lat: 17.4156, lng: 78.4347, radius: 200 },
-  { id: "c5", name: "Mrs. Gupta — Salt Lake, Kolkata",         lat: 22.5726, lng: 88.4109, radius: 200 },
-  { id: "c6", name: "Mr. Nair — Kochi Central",                lat:  9.9312, lng: 76.2673, radius: 200 },
-  { id: "c7", name: "Omsorg Office — Head Office",             lat: 28.6280, lng: 77.2182, radius: 300 },
-];
-
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
@@ -107,7 +94,7 @@ function PrivacyScreen({ onAccept }) {
   );
 }
 
-function SelectionScreen({ staffName, setStaffName, clientId, setClientId, onCheckIn, loading }) {
+function SelectionScreen({ staffName, setStaffName, clientId, setClientId, clients, onCheckIn, loading }) {
   const valid = staffName.trim().length > 1 && clientId;
   return (
     <Card>
@@ -144,8 +131,8 @@ function SelectionScreen({ staffName, setStaffName, clientId, setClientId, onChe
   );
 }
 
-function CheckedInScreen({ checkin, onCheckOut, loading }) {
-  const client = CLIENTS.find(c => c.id === checkin.clientId);
+function CheckedInScreen({ checkin, clients, onCheckOut, loading }) {
+  const client = clients.find(c => c.id === checkin.clientId);
   const [elapsed, setElapsed] = useState("");
 
   useEffect(() => {
@@ -212,8 +199,8 @@ function ExceptionScreen({ distance, reason, setReason, onSubmit, loading }) {
   );
 }
 
-function CompleteScreen({ checkin, checkout, onReset }) {
-  const client = CLIENTS.find(c => c.id === checkin.clientId);
+function CompleteScreen({ checkin, checkout, clients, onReset }) {
+  const client = clients.find(c => c.id === checkin.clientId);
   return (
     <Card style={{ borderLeft: `4px solid ${G}` }}>
       <div style={{ fontSize: "32px", textAlign: "center", marginBottom: "12px" }}>🎉</div>
@@ -245,7 +232,7 @@ function CompleteScreen({ checkin, checkout, onReset }) {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function CheckIn() {
-  const [screen, setScreen] = useState("privacy");  // privacy | select | processing | checkedin | exception | complete
+  const [screen, setScreen] = useState("privacy");
   const [staffName, setStaffName] = useState("");
   const [clientId, setClientId] = useState("");
   const [checkin, setCheckin] = useState(null);
@@ -253,7 +240,22 @@ export default function CheckIn() {
   const [exceptionReason, setExceptionReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [recordId, setRecordId] = useState(null); // Airtable record ID
+  const [recordId, setRecordId] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+  const [clientsError, setClientsError] = useState("");
+
+  // Load clients from Airtable
+  useEffect(() => {
+    fetch("/api/clients")
+      .then(r => r.json())
+      .then(data => {
+        if (data.clients) setClients(data.clients);
+        else setClientsError("Could not load client list. Please try again.");
+      })
+      .catch(() => setClientsError("Could not load client list. Please check your connection."))
+      .finally(() => setClientsLoading(false));
+  }, []);
 
   // Restore state from localStorage (in case page refreshes mid-shift)
   useEffect(() => {
@@ -281,7 +283,7 @@ export default function CheckIn() {
     setError("");
     try {
       const loc = await getLocation();
-      const client = CLIENTS.find(c => c.id === clientId);
+      const client = clients.find(c => c.id === clientId);
       const distance = haversineDistance(loc.lat, loc.lng, client.lat, client.lng);
       const withinZone = distance <= client.radius;
       const time = new Date().toISOString();
@@ -311,7 +313,7 @@ export default function CheckIn() {
     setError("");
     try {
       const loc = await getLocation();
-      const client = CLIENTS.find(c => c.id === checkin.clientId);
+      const client = clients.find(c => c.id === checkin.clientId);
       const distance = haversineDistance(loc.lat, loc.lng, client.lat, client.lng);
       const withinZone = distance <= client.radius;
       const time = new Date().toISOString();
@@ -376,10 +378,16 @@ export default function CheckIn() {
         )}
 
         {screen === "privacy"    && <PrivacyScreen onAccept={() => setScreen("select")} />}
-        {screen === "select"     && <SelectionScreen staffName={staffName} setStaffName={setStaffName} clientId={clientId} setClientId={setClientId} onCheckIn={handleCheckIn} loading={loading} />}
-        {screen === "checkedin"  && checkin && <CheckedInScreen checkin={checkin} onCheckOut={handleCheckOut} loading={loading} />}
+        {screen === "select"     && (
+          clientsLoading
+            ? <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>Loading client list…</div>
+            : clientsError
+            ? <div style={{ background: "#FEE2E2", color: "#991B1B", padding: "14px", borderRadius: "10px", fontSize: "13px" }}>{clientsError}</div>
+            : <SelectionScreen staffName={staffName} setStaffName={setStaffName} clientId={clientId} setClientId={setClientId} clients={clients} onCheckIn={handleCheckIn} loading={loading} />
+        )}
+        {screen === "checkedin"  && checkin && <CheckedInScreen checkin={checkin} clients={clients} onCheckOut={handleCheckOut} loading={loading} />}
         {screen === "exception"  && <ExceptionScreen distance={checkout?.distance} reason={exceptionReason} setReason={setExceptionReason} onSubmit={handleExceptionSubmit} loading={loading} />}
-        {screen === "complete"   && checkin && checkout && <CompleteScreen checkin={checkin} checkout={checkout} onReset={reset} />}
+        {screen === "complete"   && checkin && checkout && <CompleteScreen checkin={checkin} checkout={checkout} clients={clients} onReset={reset} />}
 
         {screen !== "privacy" && screen !== "complete" && (
           <div style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", marginTop: "8px" }}>
