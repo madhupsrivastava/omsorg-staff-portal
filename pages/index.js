@@ -24,7 +24,7 @@ const TOOLS = [
     id: "pricing",
     name: "Pricing Tool",
     desc: "Manage and update internal rate cards and pricing tables",
-    url: "https://project-iodcs.vercel.app",
+    url: "https://omsorg-pricing.vercel.app",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <path d="M14 3L25 8v6c0 6-5 10-11 12C8 24 3 20 3 14V8l11-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
