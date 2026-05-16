@@ -21,7 +21,22 @@ const TOOLS = [
     tag: "Client-facing",
   },
   {
-    id: "pricing",
+    id: "checkin",
+    name: "Staff Check-in",
+    desc: "GPS-verified check-in and check-out for field staff and caregivers",
+    url: "/checkin",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="10" r="4" stroke="currentColor" strokeWidth="2"/>
+        <path d="M14 2C9.58 2 6 5.58 6 10c0 6 8 16 8 16s8-10 8-16c0-4.42-3.58-8-8-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        <circle cx="14" cy="10" r="2" fill="currentColor"/>
+      </svg>
+    ),
+    color: "#6B21A8",
+    lightColor: "#FAF5FF",
+    status: "live",
+    tag: "Field Staff",
+  },
     name: "Pricing Tool",
     desc: "Manage and update internal rate cards and pricing tables",
     url: "https://omsorg-pricing.vercel.app",
@@ -94,7 +109,11 @@ function ToolCard({ tool }) {
 
   const handleOpen = () => {
     if (isLive && tool.url && tool.url !== "#") {
-      window.location.href = tool.url;
+      if (tool.url.startsWith("/")) {
+        window.location.href = tool.url;
+      } else {
+        window.location.href = tool.url;
+      }
     }
   };
 
