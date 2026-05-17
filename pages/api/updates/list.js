@@ -25,11 +25,6 @@ export default async function handler(req, res) {
   if (status) query = query.eq("approval_status", status);
   if (clientId) query = query.eq("client_id", clientId);
 
-  // Staff can only see their own updates; supervisors/admins see all
-  if (auth.user.role === "staff") {
-    query = query.eq("staff_id", "staff");
-  }
-
   const { data, error } = await query;
   if (error) { console.error(error); return res.status(500).json({ error: error.message }); }
 
