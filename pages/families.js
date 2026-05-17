@@ -39,7 +39,7 @@ export default function Families() {
   const loadData = async () => {
     setLoading(true);
     const [clientsRes, accessRes] = await Promise.all([
-      fetch("/api/clients"),
+      fetch("/api/families/clients"),
       fetch("/api/families/list"),
     ]);
     const clientsData = await clientsRes.json();
