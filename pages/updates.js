@@ -222,7 +222,7 @@ export default function Updates() {
   };
 
 
-  const role = user?.user_metadata?.role || "staff"; // will use DB role in production
+  const role = "supervisor"; // All staff have supervisor access for MVP // will use DB role in production
   const isSupervisor = ["admin", "supervisor"].includes(role);
   const pendingReview = updates.filter(u => u.approval_status === "needs_review");
 
@@ -452,3 +452,5 @@ export default function Updates() {
     </>
   );
 }
+
+export const getServerSideProps = () => ({ props: {} });
