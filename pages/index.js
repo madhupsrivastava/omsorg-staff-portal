@@ -38,6 +38,8 @@ const TOOLS = [
     status: "live",
     tag: "Family Comms",
   },
+  {
+    id: "updates",
     name: "Family Update Generator",
     desc: "Create AI-powered care updates for families — with supervisor approval workflow",
     url: "/updates",
