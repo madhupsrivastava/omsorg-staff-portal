@@ -21,7 +21,22 @@ const TOOLS = [
     tag: "Client-facing",
   },
   {
-    id: "checkin",
+    id: "updates",
+    name: "Family Update Generator",
+    desc: "Create AI-powered care updates for families — with supervisor approval workflow",
+    url: "/updates",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M4 6h20v16a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor" strokeWidth="2"/>
+        <path d="M4 6l10-4 10 4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        <path d="M9 13h10M9 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    color: "#0F6E56",
+    lightColor: "#E1F5EE",
+    status: "live",
+    tag: "Family Comms",
+  },
     name: "Staff Check-in",
     desc: "GPS-verified check-in and check-out for field staff and caregivers",
     url: "/checkin",
