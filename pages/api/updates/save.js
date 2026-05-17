@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   const supabase = createServerClient();
   const {
-    id, clientId, clientName, date, updateType,
+    id, clientId, clientName, staffName, date, updateType,
     mealsTaken, medicationStatus, moodBehaviour,
     mobilityActivity, sleepRest, healthObservations,
     concernFlag, concernDetails, roughNotes,
@@ -21,8 +21,8 @@ export default async function handler(req, res) {
     client_name:          clientName,
     date:                 date || new Date().toISOString().split("T")[0],
     update_type:          updateType,
-    staff_id:             "staff",
-    staff_name:           "Staff Member",
+    staff_id:             null,
+    staff_name:           staffName || "Omsorg Staff",
     rough_notes:          roughNotes,
     meals_taken:          mealsTaken,
     medication_status:    medicationStatus,
