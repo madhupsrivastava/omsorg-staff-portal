@@ -21,7 +21,23 @@ const TOOLS = [
     tag: "Client-facing",
   },
   {
-    id: "updates",
+    id: "families",
+    name: "Family Access",
+    desc: "Invite family members and manage who can view care updates",
+    url: "/families",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <circle cx="10" cy="9" r="4" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="20" cy="9" r="3" stroke="currentColor" strokeWidth="2"/>
+        <path d="M2 24c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M22 24c0-3-2-5-5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    color: "#0E7490",
+    lightColor: "#ECFEFF",
+    status: "live",
+    tag: "Family Comms",
+  },
     name: "Family Update Generator",
     desc: "Create AI-powered care updates for families — with supervisor approval workflow",
     url: "/updates",
