@@ -137,7 +137,10 @@ export default function Updates() {
 
   useEffect(() => {
     loadUpdates();
-    fetch("/api/clients").then(r => r.json()).then(d => setClients(d.clients || []));
+    // Fetch clients from Supabase (not Airtable) so client_id is a valid UUID
+    fetch("/api/updates/clients")
+      .then(r => r.json())
+      .then(d => setClients(d.clients || []));
   }, []);
 
   const loadUpdates = async () => {
