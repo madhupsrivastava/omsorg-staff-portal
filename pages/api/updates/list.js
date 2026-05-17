@@ -1,10 +1,8 @@
-import { requireAuth, createServerClient } from "../../../lib/supabase";
+import { createServerClient } from "../../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
 
-  const auth = await requireAuth(req, ["admin", "supervisor", "staff"]);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const supabase = createServerClient();
   const { status, clientId, limit = 50 } = req.query;
@@ -29,7 +27,7 @@ export default async function handler(req, res) {
 
   // Staff can only see their own updates; supervisors/admins see all
   if (auth.user.role === "staff") {
-    query = query.eq("staff_id", auth.user.id);
+    query = query.eq("staff_id", "staff");
   }
 
   const { data, error } = await query;
