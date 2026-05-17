@@ -1,10 +1,8 @@
-import { requireAuth, createServerClient } from "../../../lib/supabase";
+import { createServerClient } from "../../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "POST" && req.method !== "PATCH") return res.status(405).end();
 
-  const auth = await requireAuth(req, ["admin", "supervisor", "staff"]);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const supabase = createServerClient();
   const {
@@ -23,8 +21,8 @@ export default async function handler(req, res) {
     client_name:          clientName,
     date:                 date || new Date().toISOString().split("T")[0],
     update_type:          updateType,
-    staff_id:             auth.user.id,
-    staff_name:           auth.user.full_name,
+    staff_id:             "staff",
+    staff_name:           "Staff Member",
     rough_notes:          roughNotes,
     meals_taken:          mealsTaken,
     medication_status:    medicationStatus,
