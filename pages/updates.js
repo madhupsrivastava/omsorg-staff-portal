@@ -172,7 +172,7 @@ export default function Updates() {
   const handleSave = async (status = "generated") => {
     setSaving(true); setError("");
     const payload = {
-      id: savedId, clientId, clientName, date: updateDate, updateType,
+      id: savedId, clientId, clientName, staffName, date: updateDate, updateType,
       mealsTaken: meals, medicationStatus: medication, moodBehaviour: mood,
       mobilityActivity: mobility, sleepRest: sleep, healthObservations: healthObs,
       concernFlag: hasConcern, concernDetails, roughNotes, language, tone,
@@ -286,6 +286,9 @@ export default function Updates() {
           <div>
             {/* Client & Date */}
             <div style={{ background: "#fff", borderRadius: "14px", padding: "16px", marginBottom: "12px" }}>
+              <Field label="Your Name *">
+                <input value={staffName} onChange={e => setStaffName(e.target.value)} placeholder="Enter your name" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "15px", boxSizing: "border-box" }} />
+              </Field>
               <Field label="Client / Resident *">
                 <select value={clientId} onChange={e => { setClientId(e.target.value); setClientName(clients.find(c=>c.id===e.target.value)?.name || ""); }}
                   style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "15px", background: "#fff" }}>
