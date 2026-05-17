@@ -55,6 +55,8 @@ const TOOLS = [
     status: "live",
     tag: "Family Comms",
   },
+  {
+    id: "checkin",
     name: "Staff Check-in",
     desc: "GPS-verified check-in and check-out for field staff and caregivers",
     url: "/checkin",
