@@ -1,10 +1,8 @@
-import { requireAuth, createServerClient } from "../../../lib/supabase";
+import { createServerClient } from "../../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
 
-  const auth = await requireAuth(req, ["admin", "supervisor", "staff"]);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const supabase = createServerClient();
 
