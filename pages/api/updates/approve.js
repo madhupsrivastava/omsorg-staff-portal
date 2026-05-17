@@ -23,8 +23,8 @@ export default async function handler(req, res) {
 
   const updatePayload = {
     approval_status:  statusMap[action],
-    supervisor_id:    "staff",
-    supervisor_name:  "Staff Member",
+    supervisor_id:    null,
+    supervisor_name:  "Omsorg Supervisor",
   };
 
   if (action === "approve" || action === "publish") {
