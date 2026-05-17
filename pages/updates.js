@@ -104,10 +104,7 @@ function UpdateCard({ update, onSelect }) {
 }
 
 export default function Updates() {
-  const supabase = createBrowserClient();
-  const [user, setUser]     = useState(null);
-  const [session, setSession] = useState(null);
-  const [view, setView]     = useState("list"); // list | create | review
+  const [view, setView]     = useState("list");
   const [updates, setUpdates] = useState([]);
   const [clients, setClients] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -120,6 +117,7 @@ export default function Updates() {
   // Form state
   const [clientId,      setClientId]      = useState("");
   const [clientName,    setClientName]    = useState("");
+  const [staffName,     setStaffName]     = useState("");
   const [updateDate,    setUpdateDate]    = useState(new Date().toISOString().split("T")[0]);
   const [updateType,    setUpdateType]    = useState("daily");
   const [meals,         setMeals]         = useState("");
@@ -138,42 +136,24 @@ export default function Updates() {
   const [savedId,       setSavedId]       = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        setUser(session.user);
-        fetchProfile(session.user.id, session.access_token);
-      } else {
-        window.location.href = "/login";
-      }
-    });
-    supabase.auth.onAuthStateChange((_, session) => {
-      if (!session) window.location.href = "/login";
-    });
+    loadUpdates();
+    fetch("/api/clients").then(r => r.json()).then(d => setClients(d.clients || []));
   }, []);
 
-  const fetchProfile = async (uid, token) => {
-    const res = await fetch("/api/updates/list", { headers: { Authorization: `Bearer ${token}` } });
+  const loadUpdates = async () => {
+    const res = await fetch("/api/updates/list");
     const data = await res.json();
     setUpdates(data.updates || []);
   };
 
-  useEffect(() => {
-    if (session) {
-      fetch("/api/clients", { headers: { Authorization: `Bearer ${session.access_token}` } })
-        .then(r => r.json())
-        .then(d => setClients(d.clients || []));
-    }
-  }, [session]);
-
-  const token = () => session?.access_token;
+  const token = () => null;
 
   const handleGenerate = async () => {
     if (!clientName || !updateType) return setError("Client name and update type are required");
     setGenerating(true); setError(""); setGenerated(null);
     const res = await fetch("/api/updates/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         clientName, clientId, date: updateDate, updateType,
         mealsTaken: meals, medicationStatus: medication,
@@ -206,7 +186,7 @@ export default function Updates() {
     };
     const res = await fetch("/api/updates/save", {
       method: savedId ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     const data = await res.json();
@@ -214,7 +194,6 @@ export default function Updates() {
     setSavedId(data.id);
     setSaving(false);
     // Refresh list
-    fetchProfile(user.id, token());
     if (status === "needs_review" || status === "generated") {
       alert(status === "needs_review" ? "Sent for supervisor review!" : "Saved as draft.");
     }
@@ -225,12 +204,11 @@ export default function Updates() {
     const publishedUpdate = action === "publish" ? (selected.published_update || selected.standard_update) : undefined;
     const res = await fetch("/api/updates/approve", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: selected.id, action, publishedUpdate }),
     });
     const data = await res.json();
     if (!res.ok) return setError(data.error);
-    fetchProfile(user.id, token());
     setView("list");
     setSelected(null);
   };
@@ -243,7 +221,6 @@ export default function Updates() {
     setEditedUpdate(""); setSavedId(null); setError("");
   };
 
-  if (!session) return <div style={{ padding: 40, textAlign: "center" }}>Loading…</div>;
 
   const role = user?.user_metadata?.role || "staff"; // will use DB role in production
   const isSupervisor = ["admin", "supervisor"].includes(role);
