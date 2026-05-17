@@ -19,8 +19,6 @@ function Input({ ...props }) {
 const RELATIONSHIP_OPTIONS = ["Son", "Daughter", "Spouse", "Sibling", "Parent", "Friend", "Other"];
 
 export default function Families() {
-  const supabase = createBrowserClient();
-  const [session, setSession] = useState(null);
   const [clients, setClients] = useState([]);
   const [access, setAccess] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,18 +33,14 @@ export default function Families() {
   const [relationship, setRelationship] = useState("Son");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { window.location.href = "/login"; return; }
-      setSession(session);
-      loadData(session.access_token);
-    });
+    loadData();
   }, []);
 
-  const loadData = async (token) => {
+  const loadData = async () => {
     setLoading(true);
     const [clientsRes, accessRes] = await Promise.all([
-      fetch("/api/clients", { headers: { Authorization: `Bearer ${token}` } }),
-      fetch("/api/families/list", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/clients"),
+      fetch("/api/families/list"),
     ]);
     const clientsData = await clientsRes.json();
     const accessData = await accessRes.json();
@@ -61,7 +55,7 @@ export default function Families() {
 
     const res = await fetch("/api/families/invite", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fullName, email, clientId, relationship }),
     });
     const data = await res.json();
@@ -70,7 +64,7 @@ export default function Families() {
 
     setSuccess(data.message);
     setFullName(""); setEmail(""); setClientId(""); setRelationship("Son");
-    loadData(session.access_token);
+    loadData();
     setSending(false);
   };
 
