@@ -1,11 +1,8 @@
-import { requireAuth, createServerClient } from "../../../lib/supabase";
+import { createServerClient } from "../../../lib/supabase";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  // Only admin or supervisor can invite family members
-  const auth = await requireAuth(req, ["admin", "supervisor"]);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const { fullName, email, clientId, relationship } = req.body;
 
