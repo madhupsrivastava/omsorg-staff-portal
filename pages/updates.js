@@ -209,8 +209,10 @@ export default function Updates() {
     });
     const data = await res.json();
     if (!res.ok) return setError(data.error);
+    await loadUpdates();
     setView("list");
     setSelected(null);
+    alert(action === "publish" ? "✅ Published! Family can now see this update." : "Done.");
   };
 
   const resetForm = () => {
