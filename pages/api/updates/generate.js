@@ -107,7 +107,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-opus-4-5",
         max_tokens: 1500,
         messages: [{ role: "user", content: buildPrompt(data) }],
       }),
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const err = await response.text();
       console.error("Anthropic error:", err);
-      return res.status(500).json({ error: "AI generation failed. Please try again." });
+      return res.status(500).json({ error: "AI generation failed: " + err.slice(0, 200) });
     }
 
     const aiData = await response.json();
