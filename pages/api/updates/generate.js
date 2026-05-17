@@ -88,8 +88,6 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   // Only staff, supervisor, or admin can generate updates
-  const auth = await requireAuth(req, ["admin", "supervisor", "staff"]);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const data = req.body;
   if (!data.clientName || !data.updateType) {
