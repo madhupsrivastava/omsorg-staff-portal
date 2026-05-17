@@ -16,8 +16,10 @@ export default async function handler(req, res) {
     supervisorReviewRequired, reviewReason,
   } = req.body;
 
+  const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
   const payload = {
-    client_id:            clientId,
+    client_id:            isUUID(clientId) ? clientId : null,
     client_name:          clientName,
     date:                 date || new Date().toISOString().split("T")[0],
     update_type:          updateType,
