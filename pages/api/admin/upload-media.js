@@ -6,8 +6,14 @@ export const config = {
   },
 };
 
+function checkPasscode(req) {
+  const pass = req.headers["x-admin-pass"];
+  return pass && pass === process.env.ADMIN_PASSCODE;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+  if (!checkPasscode(req)) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const { update_id, client_id, filename, content_type, base64_data, caption } = req.body;
@@ -25,8 +31,8 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(base64, "base64");
 
     const ext = (filename.split(".").pop() || "jpg").toLowerCase();
-    const safeFilename = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
-    const path = `${client_id}/${update_id}/${safeFilename}`;
+    const safeFilename = Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+    const path = client_id + "/" + update_id + "/" + safeFilename;
 
     const { error: uploadError } = await supabase.storage
       .from("update-media")
