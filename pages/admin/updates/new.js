@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 
 const G = "#8B1A1A";
+const PURPLE = "#6D28D9";
 
 const CATEGORIES = [
   { value: "attendance", label: "Attendance" },
@@ -13,6 +14,12 @@ const CATEGORIES = [
   { value: "health_observation", label: "Health Observation" },
   { value: "incident_concern", label: "Incident / Concern" },
   { value: "general", label: "General Update" },
+];
+
+const LANGUAGES = [
+  { value: "english", label: "English" },
+  { value: "hindi", label: "Hindi (हिन्दी)" },
+  { value: "hinglish", label: "Hinglish" },
 ];
 
 function Card({ children }) {
@@ -41,7 +48,24 @@ export default function NewUpdate() {
   const [rawMessage, setRawMessage] = useState("");
   const [familyMessage, setFamilyMessage] = useState("");
   const [source, setSource] = useState("whatsapp");
+  const [language, setLanguage] = useState("english");
   const [images, setImages] = useState([]);
+
+  // AI polish state
+  const [polishing, setPolishing] = useState(false);
+
+  // Structured care details (optional)
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [mealsTaken, setMealsTaken] = useState("");
+  const [medicationStatus, setMedicationStatus] = useState("");
+  const [moodBehaviour, setMoodBehaviour] = useState("");
+  const [mobilityActivity, setMobilityActivity] = useState("");
+  const [sleepRest, setSleepRest] = useState("");
+  const [healthObservations, setHealthObservations] = useState("");
+  const [concernFlag, setConcernFlag] = useState(false);
+  const [concernDetails, setConcernDetails] = useState("");
+
+  // UI state
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -110,6 +134,69 @@ export default function NewUpdate() {
     setPassInput("");
   }
 
+  async function handleAIPolish() {
+    setError(""); setSuccess("");
+
+    const hasRaw = rawMessage.trim().length >= 3;
+    const hasStructured = !!(
+      mealsTaken.trim() || medicationStatus.trim() || moodBehaviour.trim() ||
+      mobilityActivity.trim() || sleepRest.trim() || healthObservations.trim() ||
+      (concernFlag && concernDetails.trim())
+    );
+
+    if (!hasRaw && !hasStructured) {
+      setError("Paste a WhatsApp message or fill at least one care detail first.");
+      return;
+    }
+
+    if (familyMessage.trim() && !window.confirm("This will replace the current family-facing message with the AI version. Continue?")) {
+      return;
+    }
+
+    const selectedClient = clients.find(c => c.id === clientId);
+
+    setPolishing(true);
+    try {
+      const res = await fetch("/api/admin/ai-polish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Pass": storedPass,
+        },
+        body: JSON.stringify({
+          raw_message: rawMessage,
+          client_name: selectedClient ? selectedClient.name : "",
+          category,
+          staff_name: staffName,
+          language,
+          meals_taken: mealsTaken,
+          medication_status: medicationStatus,
+          mood_behaviour: moodBehaviour,
+          mobility_activity: mobilityActivity,
+          sleep_rest: sleepRest,
+          health_observations: healthObservations,
+          concern_flag: concernFlag,
+          concern_details: concernDetails,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          handleLockAgain();
+          throw new Error("Session expired. Enter the passcode again.");
+        }
+        throw new Error(data.error || "AI polish failed");
+      }
+
+      setFamilyMessage(data.polished);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setPolishing(false);
+    }
+  }
+
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
     const processed = [];
@@ -169,7 +256,7 @@ export default function NewUpdate() {
       if (!createRes.ok) {
         if (createRes.status === 401) {
           handleLockAgain();
-          throw new Error("Session expired. Please enter the passcode again.");
+          throw new Error("Session expired. Enter the passcode again.");
         }
         throw new Error(createData.error || "Failed to publish");
       }
@@ -195,8 +282,13 @@ export default function NewUpdate() {
       }
 
       setSuccess("Update published" + (images.length ? " with " + images.length + " photo(s)" : "") + "!");
+      // Reset form (but keep supervisor name and language)
       setClientId(""); setStaffName(""); setRawMessage(""); setFamilyMessage("");
       setImages([]); setCategory("general");
+      setMealsTaken(""); setMedicationStatus(""); setMoodBehaviour("");
+      setMobilityActivity(""); setSleepRest(""); setHealthObservations("");
+      setConcernFlag(false); setConcernDetails("");
+      setDetailsExpanded(false);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -205,10 +297,10 @@ export default function NewUpdate() {
   };
 
   const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px", fontFamily: "inherit", boxSizing: "border-box", background: "#fff" };
-  const textareaStyle = { ...inputStyle, minHeight: "100px", resize: "vertical" };
+  const textareaStyle = { ...inputStyle, minHeight: "80px", resize: "vertical" };
+  const detailTextareaStyle = { ...inputStyle, minHeight: "60px", resize: "vertical" };
   const bodyCss = "* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F4F4F4; }";
 
-  // Loading initial check
   if (checking) {
     return (
       <>
@@ -220,7 +312,6 @@ export default function NewUpdate() {
     );
   }
 
-  // Passcode gate
   if (!unlocked) {
     return (
       <>
@@ -250,7 +341,6 @@ export default function NewUpdate() {
     );
   }
 
-  // Main form
   return (
     <>
       <Head><title>New Update — Omsorg</title></Head>
@@ -261,7 +351,7 @@ export default function NewUpdate() {
           <div>
             <a href="/" style={{ color: "#F5C0C0", fontSize: "12px", textDecoration: "none" }}>← Back to Portal</a>
             <div style={{ color: "#fff", fontSize: "19px", fontWeight: 700, marginTop: "8px" }}>New Care Update</div>
-            <div style={{ color: "#F5C0C0", fontSize: "12px" }}>Paste a WhatsApp message, polish for family, publish</div>
+            <div style={{ color: "#F5C0C0", fontSize: "12px" }}>WhatsApp → AI polish → family timeline</div>
           </div>
           <button onClick={handleLockAgain} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", padding: "6px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: 600, cursor: "pointer", marginTop: "4px" }}>
             Lock
@@ -293,12 +383,13 @@ export default function NewUpdate() {
             <div>
               <Label>Your Name (Supervisor)</Label>
               <input type="text" value={supervisorName} onChange={e => setSupervisorName(e.target.value)} placeholder="e.g. Madhup" style={inputStyle} />
-              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>Remembered on this device for next time.</div>
+              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>Remembered on this device.</div>
             </div>
           </Card>
 
           <Card>
             <div style={{ fontWeight: 700, color: "#111827", marginBottom: "14px", fontSize: "15px" }}>Content</div>
+
             <div style={{ marginBottom: "12px" }}>
               <Label>Source</Label>
               <select value={source} onChange={e => setSource(e.target.value)} style={inputStyle}>
@@ -307,22 +398,78 @@ export default function NewUpdate() {
                 <option value="app">From app</option>
               </select>
             </div>
+
             <div style={{ marginBottom: "12px" }}>
               <Label>Raw WhatsApp message {source === "whatsapp" ? "*" : ""}</Label>
-              <textarea value={rawMessage} onChange={e => setRawMessage(e.target.value)} placeholder="Paste the original WhatsApp message here…" style={textareaStyle} required={source === "whatsapp"} />
+              <textarea value={rawMessage} onChange={e => setRawMessage(e.target.value)} placeholder="Paste the original WhatsApp message here (any language)…" style={textareaStyle} required={source === "whatsapp"} />
               <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>Kept for internal records. Family won't see this.</div>
             </div>
+
+            <div style={{ marginBottom: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
+              <select value={language} onChange={e => setLanguage(e.target.value)} style={{ ...inputStyle, width: "auto", flex: "0 0 auto" }}>
+                {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+              <button type="button" onClick={handleAIPolish} disabled={polishing} style={{ flex: 1, padding: "11px 16px", borderRadius: "8px", border: "none", background: polishing ? "#f3f4f6" : PURPLE, color: polishing ? "#9CA3AF" : "#fff", fontSize: "13px", fontWeight: 700, cursor: polishing ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
+                {polishing ? "✨ Polishing…" : "✨ AI Polish → Family Message"}
+              </button>
+            </div>
+
+            <button type="button" onClick={() => setDetailsExpanded(!detailsExpanded)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px dashed #d1d5db", background: "#fafafa", color: "#6b7280", fontSize: "12px", cursor: "pointer", fontFamily: "inherit", marginBottom: "12px", textAlign: "left" }}>
+              {detailsExpanded ? "▼ Hide care details" : "▶ Add care details (optional — makes AI output richer)"}
+            </button>
+
+            {detailsExpanded && (
+              <div style={{ background: "#fafafa", padding: "14px", borderRadius: "10px", marginBottom: "12px" }}>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Meals Taken</Label>
+                  <textarea value={mealsTaken} onChange={e => setMealsTaken(e.target.value)} placeholder="What did they eat today? Any difficulty?" style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Medication</Label>
+                  <textarea value={medicationStatus} onChange={e => setMedicationStatus(e.target.value)} placeholder="Which meds, what time, any missed?" style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Mood / Behaviour</Label>
+                  <textarea value={moodBehaviour} onChange={e => setMoodBehaviour(e.target.value)} placeholder="Calm, chatty, irritable, withdrawn?" style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Mobility / Activity</Label>
+                  <textarea value={mobilityActivity} onChange={e => setMobilityActivity(e.target.value)} placeholder="Walking, exercises, sitting in chair, etc." style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Sleep / Rest</Label>
+                  <textarea value={sleepRest} onChange={e => setSleepRest(e.target.value)} placeholder="Slept well? Disturbed? Afternoon nap?" style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <Label>Health Observations</Label>
+                  <textarea value={healthObservations} onChange={e => setHealthObservations(e.target.value)} placeholder="BP, sugar, any complaints?" style={detailTextareaStyle} />
+                </div>
+                <div style={{ marginBottom: concernFlag ? "10px" : "0" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", color: "#374151" }}>
+                    <input type="checkbox" checked={concernFlag} onChange={e => setConcernFlag(e.target.checked)} />
+                    <span>Flag a concern</span>
+                  </label>
+                </div>
+                {concernFlag && (
+                  <div>
+                    <Label>Concern Details</Label>
+                    <textarea value={concernDetails} onChange={e => setConcernDetails(e.target.value)} placeholder="What's the concern? AI will mention it calmly to the family." style={detailTextareaStyle} />
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <Label>Family-facing message *</Label>
-              <textarea value={familyMessage} onChange={e => setFamilyMessage(e.target.value)} placeholder="Write the polished, warm message the family will see…" style={textareaStyle} required />
-              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>This appears on the family's timeline.</div>
+              <textarea value={familyMessage} onChange={e => setFamilyMessage(e.target.value)} placeholder="Write the family-facing message — or click AI Polish above to generate one." style={textareaStyle} required />
+              <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>This appears on the family's timeline. You can always edit AI output before publishing.</div>
             </div>
           </Card>
 
           <Card>
             <div style={{ fontWeight: 700, color: "#111827", marginBottom: "14px", fontSize: "15px" }}>Photos (optional)</div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} style={{ display: "none" }} />
-            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px dashed #d1d5db", background: "#fafafa", color: "#6b7280", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
+            <button type="button" onClick={() => fileInputRef.current && fileInputRef.current.click()} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px dashed #d1d5db", background: "#fafafa", color: "#6b7280", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
               📷 Add photo(s)
             </button>
             {images.length > 0 && (
