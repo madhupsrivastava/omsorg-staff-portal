@@ -1,7 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
+function checkPasscode(req) {
+  const pass = req.headers["x-admin-pass"];
+  return pass && pass === process.env.ADMIN_PASSCODE;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+  if (!checkPasscode(req)) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const {
